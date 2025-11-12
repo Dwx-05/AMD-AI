@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>饺子消消乐</title>
+    <style>
+        body { font-family: Arial; text-align: center; background: #f0f0f0; padding: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(6, 60px); gap: 5px; margin: 20px auto; width: 390px; }
+        .cell { width: 60px; height: 60px; background-size: cover; border-radius: 8px; border: 2px solid transparent; }
+        .cell.selected { border-color: red; }
+        button { padding: 10px 20px; background: #ff6b6b; color: white; border: none; border-radius: 5px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h2>饺子消消乐 🥟</h2>
+    <div>分数: <span id="score">0</span></div>
+    <div id="grid" class="grid"></div>
+    <button onclick="initGame()">重新开始</button>
+
+    <script>
+        // 使用稳定的图片链接
+        const IMAGES = [
+            'https://img.zcool.cn/community/010a875f4e63c511013e4584e15e3b.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100', // 替换图片1
+            'https://img.zcool.cn/community/0142d15f4e63c511013e4584c9f7c6.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100', // 替换图片2
+            'https://img.zcool.cn/community/01b6c35f4e63c511013e4584c8d7a5.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100', // 替换图片3
+            'https://img.zcool.cn/community/0177b95f4e63c511013e4584a8a7a4.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100', // 替换图片4
+            'https://img.zcool.cn/community/01e5c75f4e63c511013e4584b9b7a3.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100', // 替换图片5
+            'https://img.zcool.cn/community/01a8f85f4e63c511013e4584d9d7a2.jpg?x-oss-process=image/auto-orient,1/resize,m_lfit,w_1600,limit_1/sharpen,100/format,webp/quality,Q_100'  // 替换图片6
+        ];
+        
+        let grid = [], score = 0, selected = null;
+        
+        function initGame() {
+            grid = []; score = 0; selected = null;
+            document.getElementById('score').textContent = score;
+            const gridEl = document.getElementById('grid');
+            gridEl.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                grid[i] = [];
+                for (let j = 0; j < 6; j++) {
+                    const type = Math.floor(Math.random() * IMAGES.length);
+                    grid[i][j] = type;
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.backgroundImage = `url(${IMAGES[type]})`;
+                    cell.onclick = () => handleClick(i, j, cell);
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+        
+        function handleClick(i, j, cell) {
+            if (!selected) {
+                selected = {i, j, cell};
+                cell.classList.add('selected');
+                return;
+            }
+            
+            if (selected.i === i && selected.j === j) {
+                selected.cell.classList.remove('selected');
+                selected = null;
+                return;
+            }
+            
+            const isAdjacent = (Math.abs(selected.i - i) === 1 && selected.j === j) || 
+                             (Math.abs(selected.j - j) === 1 && selected.i === i);
+            
+            if (isAdjacent && grid[selected.i][selected.j] === grid[i][j]) {
+                selected.cell.classList.remove('selected');
+                removeCells([selected, {i, j, cell}]);
+                selected = null;
+            } else {
+                selected.cell.classList.remove('selected');
+                selected = {i, j, cell};
+                cell.classList.add('selected');
+            }
+        }
+        
+        function removeCells(cells) {
+            score += 20;
+            document.getElementById('score').textContent = score;
+            cells.forEach(({i, j, cell}) => {
+                grid[i][j] = null;
+                cell.style.backgroundImage = 'none';
+                cell.style.backgroundColor = '#f0f0f0';
+            });
+            setTimeout(() => {
+                dropCells();
+                fillCells();
+            }, 300);
+        }
+        
+        function dropCells() {
+            for (let j = 0; j < 6; j++) {
+                let empty = 0;
+                for (let i = 5; i >= 0; i--) {
+                    if (grid[i][j] === null) empty++;
+                    else if (empty > 0) {
+                        grid[i + empty][j] = grid[i][j];
+                        grid[i][j] = null;
+                    }
+                }
+            }
+        }
+        
+        function fillCells() {
+            const cells = document.querySelectorAll('.cell');
+            let index = 0;
+            for (let j = 0; j < 6; j++) {
+                for (let i = 0; i < 6; i++) {
+                    if (grid[i][j] === null) {
+                        const type = Math.floor(Math.random() * IMAGES.length);
+                        grid[i][j] = type;
+                        cells[index].style.backgroundImage = `url(${IMAGES[type]})`;
+                        cells[index].style.backgroundColor = '';
+                    }
+                    index++;
+                }
+            }
+        }
+        
+        initGame();
+    </script>
+</body>
+</html>
